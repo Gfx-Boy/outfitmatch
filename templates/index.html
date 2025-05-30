@@ -1,0 +1,1042 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+	<!-- meta data -->
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+
+	<!--font-family-->
+	<link
+		href="https://fonts.googleapis.com/css?family=Poppins:100,100i,200,200i,300,300i,400,400i,500,500i,600,600i,700,700i,800,800i,900,900i"
+		rel="stylesheet">
+
+	<!-- title of site -->
+	<title>Find Your Perfect
+		Outfit in Pakistani Brands</title>
+
+	<!-- For favicon png -->
+	<link rel="shortcut icon" type="image/icon" href="{{ url_for('static', filename='logo/favicon.png') }}" />
+
+	<!--font-awesome.min.css-->
+	<link rel="stylesheet" href="{{ url_for('static', filename='css/font-awesome.min.css') }}">
+
+	<!--linear icon css-->
+	<link rel="stylesheet" href="{{ url_for('static', filename='css/linearicons.css') }}">
+
+	<!--animate.css-->
+	<link rel="stylesheet" href="{{ url_for('static', filename='css/animate.css') }}">
+
+	<!--flaticon.css-->
+	<link rel="stylesheet" href="{{ url_for('static', filename='css/flaticon.css') }}">
+
+	<!--slick.css-->
+	<link rel="stylesheet" href="{{ url_for('static', filename='css/slick.css') }}">
+	<link rel="stylesheet" href="{{ url_for('static', filename='css/slick-theme.css') }}">
+
+	<!--bootstrap.min.css-->
+	<link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+
+	<!-- bootsnav -->
+	<link rel="stylesheet" href="{{ url_for('static', filename='css/bootsnav.css') }}">
+
+	<!--style.css-->
+	<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+	<!--responsive.css-->
+	<link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}">
+
+
+
+
+
+</head>
+
+<body>
+		<!--[if lte IE 9]>
+            <p class="browserupgrade">You are using an <strong>outdated</strong> browser. Please <a href="https://browsehappy.com/">upgrade your browser</a> to improve your experience and security.</p>
+        <![endif]-->
+		
+		
+
+
+	<!-- top-area Start -->
+	<section class="top-area">
+		<div class="header-area">
+			<!-- Start Navigation -->
+			<nav class="navbar navbar-default bootsnav  navbar-sticky navbar-scrollspy" data-minus-value-desktop="70"
+				data-minus-value-mobile="55" data-speed="1000">
+
+				<div class="container">
+
+					<!-- Start Header Navigation -->
+					<div class="navbar-header">
+						<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar-menu">
+							<i class="fa fa-bars"></i>
+						</button>
+						<a class="navbar-brand" href="{{ url_for('index') }}">Outfit &nbsp;<span>match</span></a>
+
+					</div><!--/.navbar-header-->
+					<!-- End Header Navigation -->
+
+					<!-- Collect the nav links, forms, and other content for toggling -->
+					<div class="collapse navbar-collapse menu-ui-design" id="navbar-menu">
+						<ul class="nav navbar-nav navbar-right" data-in="fadeInDown" data-out="fadeOutUp">
+							<li class=" scroll active"><a href="#home">home</a></li>
+							<li class="scroll"><a href="#works">how it works</a></li>
+							<li class="scroll"><a href="#contact">contact</a></li>
+							{% if 'username' in session %}
+
+							<li class="nav-item">
+								<a class="nav-link" href="#">HI {{ session['username'] }}</a>
+							</li>
+							{% endif %}
+
+							{% if 'username' in session %}
+							<li>
+								<a class="login-btn" href="{{ url_for('search_history') }}">Search History</a>
+							</li>
+                           
+							<li>
+								<a class="login-btn" href="{{ url_for('logout') }}">Logout</a>
+							</li>
+
+							{% else %}
+							<li>
+								<a class="login-btn" href="{{ url_for('login') }}">Login</a>
+							</li>
+							{% endif %}
+
+						</ul><!--/.nav -->
+					</div><!-- /.navbar-collapse -->
+				</div><!--/.container-->
+			</nav><!--/nav-->
+			<!-- End Navigation -->
+		</div><!--/.header-area-->
+		<div class="clearfix"></div>
+
+	</section><!-- /.top-area-->
+	<!-- top-area End -->
+
+		<!--welcome-hero start -->
+		<section id="home" class="welcome-hero">
+			<div class="container">
+				<div class="welcome-hero-txt">
+					<h2>Find Your Perfect <br>
+						Outfit in Pakistani Brands</h2>
+					<p>
+						Find Best Size, Color, Brands and many more things in just One click 
+					</p>
+				</div>
+				<div class="row">
+					<!-- prompt search  -->
+					<div class="col-lg-6">
+						<div class="welcome-hero-serch-box">
+							<div class="welcome-hero-form">
+								<div class="single-welcome-hero-form">
+									<h3>Type</h3>
+									<!-- <form action="index.html"> -->
+										<input type="text" id="descriptionInput" placeholder="Ex: Search by brand name, Color and Size" />
+									<!-- </form> -->
+									<div class="welcome-hero-form-icon" onclick="searchProduct()" style="cursor: pointer;">
+										<i class="flaticon-search" id="searchButton" style="display: none;"></i>
+									</div>
+								</div>
+							<div id="error-message" style="color: red; font-weight: bold; display: none;"></div>
+							</div>
+						</div>
+					</div>
+
+					<!-- Image Search  -->
+					<div class="col-lg-6">
+						<div class="welcome-hero-serch-box">
+							<div class="welcome-hero-form">
+								<div class="single-welcome-hero-form">
+									<h3>Image</h3>
+									<div class="upload-container">
+										<div class="upload-box" id="upload-box">
+										  <p style="padding: 6px;">Drag and drop images here or click to select files</p>
+										  <input type="file" id="imageInput" multiple accept="image/*" hidden style="display: none;"/>
+										</div>
+									</div>
+									<div class="welcome-hero-form-icon"  onclick="searchProductByImage()"  style="cursor: pointer;">
+										<i class="flaticon-search"  id="searchButtonImg" style="display: none;"></i>
+									</div>
+								</div>
+							</div>
+						</div>
+						
+						<div class="preview-container" id="preview-container">
+							<!-- Image previews will appear here -->
+						</div>
+					</div>
+				</div>
+			</div>
+
+		</section><!--/.welcome-hero-->
+		<!--welcome-hero end -->
+
+		<!--list-brands start -->
+		<section id="list-topics" class="list-topics">
+			<div class="container">
+				<div class="list-topics-content">
+					<ul>
+						<li>
+							<div class="single-list-topics-content">
+								<div class="single-list-topics-icon">
+									<img src="{{ url_for('static', filename='images/Brands_logo/Khaadi_logo.png') }}" alt="" width="80" srcset="">
+								</div>
+								<h2><a href="#">Khaadi</a></h2>
+								<p>11,150* listings</p>
+							</div>
+						</li>
+						<li>
+							<div class="single-list-topics-content">
+								<div class="single-list-topics-icon">
+									<img src="{{ url_for('static', filename='images/Brands_logo/Saya_logo.png') }}" alt="" width="150" srcset="">
+								</div>
+								<h2><a href="#">Zeen</a></h2>
+								<p>2,408* listings</p>
+							</div>
+						</li>
+						<li>
+							<div class="single-list-topics-content">
+								<div class="single-list-topics-icon">
+									<img src="{{ url_for('static', filename='images/Brands_logo/Jdot_logo.png') }}" alt="" width="70" srcset="">
+								</div>
+								<h2><a href="#">J. Pakistan</a></h2>
+								<p>18,521* listings</p>
+							</div>
+						</li>
+						<li>
+							<div class="single-list-topics-content">
+								<div class="single-list-topics-icon">
+									<img src="{{ url_for('static', filename='images/Brands_logo/Zellbury_logo.png') }}" alt="" width="100" srcset="">
+								</div>
+								<h2><a href="#">Zellbury</a></h2>
+								<p>3,650* listings</p>
+							</div>
+						</li>
+						<li>
+							<div class="single-list-topics-content">
+								<div class="single-list-topics-icon">
+									<img src="{{ url_for('static', filename='images/Brands_logo/outfitters-1.png') }}" alt="" width="75" srcset="">
+								</div>
+								<h2><a href="#">Outfitters</a></h2>
+								<p>6,981* listings</p>
+							</div>
+						</li>
+					</ul>
+				</div>
+			</div><!--/.container-->
+
+		</section><!--/.list-topics-->
+		<!--list-Brands end-->
+
+		<!--product-details start -->
+		<section id="SearchList" class="list-topics">
+			<div class="container">
+				<div class="list-topics-content" style="top: -156px;">
+					<ul>
+						<li>
+							<div class="explore-content">
+								<div class="row"  id="product-details">
+									<div class=" col-md-4 col-sm-6" >
+										<div class="single-explore-item">
+												<div class="single-explore-img">
+													<a id="product-link"  href="" target="_blank">
+														<!-- product img -->
+														<img id="product-image" class="product-img" width="" alt="explore image">
+													</a>
+												</div>
+												<div class="single-explore-txt bg-theme-1">
+
+													<!-- Product title/Name -->
+													<h3 id="product-name"></h3>
+													<p class="explore-rating-price">
+														<a href="#"   id="product-size"></a> 
+														<span class="explore-price-box">
+															<span class="explore-price"  id="product-price"> </span>
+														</span>
+														 <a href="#">LAWN</a>
+													</p>
+													<div class="explore-person">
+														<div class="row">
+															<div class="col-sm-2">
+																<div class="explore-person-img">
+																	<a href="#">
+																		<img src="{{ url_for('static', filename='images/Brands_logo/Jdot_logo.png') }}" alt="explore person">
+																	</a>
+																</div>
+															</div>
+															<div class="col-sm-10">
+
+																<!-- product description -->
+																<p id="product-description"></p>
+															</div>
+														</div>
+													</div>
+												</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</li>
+					</ul>
+				</div>
+			</div><!--/.container-->
+
+		</section><!--/.product-details-->
+		<!--product-details end-->
+
+		<!--How it works start -->
+		<section id="works" class="works">
+			<div class="container">
+				<div class="section-header">
+					<h2>how it works</h2>
+					<p>Learn More about how our website works</p>
+				</div><!--/.section-header-->
+				<div class="works-content">
+					<div class="row">
+						<div class="col-md-4 col-sm-6">
+							<div class="single-how-works">
+								<div class="single-how-works-icon">
+									<i class="flaticon-networking"></i>
+								</div>
+								<h2><a href="#">find <span> what you want</span></a></h2>
+								<p>
+									Backend processes inputs using semantic technologies and web scraping to find matches. 
+								</p>
+							</div>
+						</div>
+						<div class="col-md-4 col-sm-6">
+							<div class="single-how-works">
+								<div class="single-how-works-icon">
+									<i class="flaticon-lightbulb-idea"></i>
+								</div>
+								<h2><a href="#">choose <span> what to</span> do</a></h2>
+								<p>
+									Users upload photos or text prompts to search for specific clothing designs. 
+								</p>
+							</div>
+						</div>
+						<div class="col-md-4 col-sm-6">
+							<div class="single-how-works">
+								<div class="single-how-works-icon">
+									<i class="flaticon-location-on-road"></i>
+								</div>
+								<h2><a href="#">explore <span> amazing</span> place</a></h2>
+								<p>
+									Results display matching designs with direct links to purchase from brand websites. 
+								</p>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div><!--/.container-->
+		
+		</section><!--/.works-->
+		<!--How it works end -->
+
+
+		<!--subscription strat -->
+		<section id="contact"  class="subscription">
+			<div class="container">
+				<div class="subscribe-title text-center">
+					<h2>
+						do you want to add your business listing with us?
+					</h2>
+					<p>
+						Listrace offer you to list your business with us and we very much able to promote your Business.
+					</p>
+				</div>
+				<div class="row">
+					<div class="col-sm-12">
+						<div class="subscription-input-group">
+							<form action="#">
+								<input type="email" class="subscription-input-form" placeholder="Enter your email here">
+								<button class="appsLand-btn subscribe-btn" onclick="window.location.href='#'">
+									creat account
+								</button>
+							</form>
+						</div>
+					</div>	
+				</div>
+			</div>
+
+		</section><!--/subscription-->	
+		<!--subscription end -->
+
+		<!--footer start-->
+		<footer id="footer"  class="footer">
+			<div class="container">
+				<div class="footer-menu">
+		           	<div class="row">
+			           	<div class="col-sm-3">
+			           		 <div class="navbar-header">
+				                <a class="navbar-brand" href="index.html">Outfit &nbsp;<span>Match</span></a>
+				            </div><!--/.navbar-header-->
+			           	</div>
+			           	<div class="col-sm-9">
+			           		<ul class="footer-menu-item">
+			                    <li class="scroll"><a href="#works">how it works</a></li>
+			                </ul><!--/.nav -->
+			           	</div>
+		           </div>
+				</div>
+				<div class="hm-footer-copyright">
+					<div class="row">
+						<div class="col-sm-5">
+							<p>
+								&copy;copyright. designed and developed by <a href="#">Rahima, Sobia & Ahmer</a>
+							</p><!--/p-->
+						</div>
+						<div class="col-sm-7">
+							<div class="footer-social">
+								<a href="#"><i class="fa fa-facebook"></i></a>	
+								<a href="#"><i class="fa fa-twitter"></i></a>
+								<a href="#"><i class="fa fa-linkedin"></i></a>
+								<a href="#"><i class="fa fa-google-plus"></i></a>
+							</div>
+						</div>
+					</div>
+					
+				</div><!--/.hm-footer-copyright-->
+			</div><!--/.container-->
+
+			<div id="scroll-Top">
+				<div class="return-to-top">
+					<i class="fa fa-angle-up " id="scroll-top" data-toggle="tooltip" data-placement="top" title="" data-original-title="Back to Top" aria-hidden="true"></i>
+				</div>
+				
+			</div><!--/.scroll-Top-->
+			
+        </footer><!--/.footer-->
+
+	<!-- Include all js compiled plugins (below), or include individual files as needed -->
+
+	<!-- jQuery -->
+	<script src="{{ url_for('static', filename='js/jquery.js') }}"></script>
+
+	<!-- Modernizr -->
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.8.3/modernizr.min.js"></script>
+
+	<!-- Bootstrap -->
+	<script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+
+	<!-- Bootsnav -->
+	<script src="{{ url_for('static', filename='js/bootsnav.js') }}"></script>
+
+	<!-- Feather Icons -->
+	<script src="{{ url_for('static', filename='js/feather.min.js') }}"></script>
+
+	<!-- Counter JS -->
+	<script src="{{ url_for('static', filename='js/jquery.counterup.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='js/waypoints.min.js') }}"></script>
+
+	<!-- Slick Slider -->
+	<script src="{{ url_for('static', filename='js/slick.min.js') }}"></script>
+
+	<!-- jQuery Easing -->
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-easing/1.4.1/jquery.easing.min.js"></script>
+
+	<!-- Custom JS -->
+	<script src="{{ url_for('static', filename='js/custom.js') }}"></script>
+
+
+	<script>
+		const imageInput = document.getElementById('imageInput');
+		const uploadBox = document.getElementById('upload-box');
+		const previewContainer = document.getElementById('preview-container');
+		const MAX_IMAGES = 5; // Maximum number of images allowed
+
+		// Trigger file input on click
+		uploadBox.addEventListener('click', () => {
+		imageInput.click();
+		});
+
+		// Handle drag and drop
+		uploadBox.addEventListener('dragover', (e) => {
+		e.preventDefault();
+		uploadBox.style.backgroundColor = '#e3f2fd';
+		});
+
+		uploadBox.addEventListener('dragleave', () => {
+		uploadBox.style.backgroundColor = '';
+		});
+
+		uploadBox.addEventListener('drop', (e) => {
+		e.preventDefault();
+		uploadBox.style.backgroundColor = '';
+		handleFiles(e.dataTransfer.files);
+		});
+
+		// Handle file input change
+		imageInput.addEventListener('change', (e) => {
+		handleFiles(e.target.files);
+		});
+
+		// Handle file preview and delete
+		function handleFiles(files) {
+		if (previewContainer.children.length >= MAX_IMAGES) {
+			alert(`You can upload a maximum of ${MAX_IMAGES} images.`);
+			return;
+		}
+
+		for (const file of files) {
+			if (file.type.startsWith('image/')) {
+			if (previewContainer.children.length < MAX_IMAGES) {
+				const reader = new FileReader();
+				reader.onload = () => {
+				const img = document.createElement('img');
+				img.src = reader.result;
+				
+				const previewDiv = document.createElement('div');
+				previewDiv.style.position = 'relative';
+
+				const deleteBtn = document.createElement('span');
+				deleteBtn.textContent = 'x';
+				deleteBtn.classList.add('delete-btn');
+				deleteBtn.addEventListener('click', () => {
+					previewDiv.remove();
+				});
+
+				previewDiv.appendChild(img);
+				previewDiv.appendChild(deleteBtn);
+				previewContainer.appendChild(previewDiv);
+				};
+				reader.readAsDataURL(file);
+			}
+			}
+		}
+		}
+
+	</script>
+
+	<script>
+		document.addEventListener("DOMContentLoaded", () => {
+		const descriptionInput = document.getElementById("descriptionInput");
+		const searchButton = document.getElementById("searchButton");
+
+		descriptionInput.addEventListener("input", () => {
+			if (descriptionInput.value.trim() !== "") {
+			searchButton.style.display = "inline-block"; // Show the button
+			} else {
+			searchButton.style.display = "none"; // Hide the button
+			}
+		});
+		});
+
+		document.addEventListener("DOMContentLoaded", () => {
+		const imageInput = document.getElementById("imageInput");
+		const searchButtonImg = document.getElementById("searchButtonImg");
+
+		imageInput.addEventListener("input", () => {
+			if (imageInput.value.trim() !== "") {
+			searchButtonImg.style.display = "inline-block"; // Show the button
+			} else {
+			searchButtonImg.style.display = "none"; // Hide the button
+			}
+		});
+		});
+
+	</script>
+
+<!-- <script>
+function uploadImage() {
+// Input field se file lene ke liye
+const imageInput = document.getElementById('imageInput');
+const file = imageInput.files[0];
+
+// FormData object mein image file add karna
+const formData = new FormData();
+formData.append('image', file);
+
+const apiUrl = 'http://127.0.0.1:5002/search'; 
+
+fetch(apiUrl, {
+	method: 'POST',
+	body: formData,
+	headers: {
+	},
+})
+	.then((response) => response.json())
+	.then((data) => {
+	console.log('Success:', data);
+	alert('Image uploaded successfully!');
+	})
+	.catch((error) => {
+	console.error('Error:', error);
+	alert('Failed to upload image.');
+	});
+}
+
+</script> -->
+
+<script>
+function searchProductByImage() {
+    // Toggle divs for UI interaction
+    const divOne = document.getElementById("list-topics");
+    const divTwo = document.getElementById("SearchList");
+
+    // Hide and show relevant divs
+    divOne.style.display = "none";
+    divTwo.style.display = "block";
+
+    // Get the file input and product details container
+    const imageInput = document.getElementById("imageInput");
+    const productDetails = document.getElementById("product-details");
+
+    // Clear previous results
+    productDetails.innerHTML = ''; // Clear the product details container
+
+    // Validate the image file
+    if (!imageInput.files.length) {
+        productDetails.innerHTML = `
+            <div style="color: red; font-weight: bold; text-align: center;">
+                Please upload an image to search.
+            </div>
+        `;
+        return; // Stop further execution
+    }
+
+    const formData = new FormData();
+    formData.append('image', imageInput.files[0]); // Append the selected image file
+
+    // Send the image file to the backend API
+	fetch('http://127.0.0.1:5001/search/img', {
+		method: 'POST',
+		body: formData, // Send as multipart/form-data
+	})
+	.then(response => {
+		return response.json().then(data => {
+			if (!response.ok) {
+				// If backend returns error, throw to catch block
+				throw new Error(data.error || 'Failed to fetch data from backend');
+			}
+			return data;
+		});
+	})
+	.then(data => {
+		const productDetails = document.getElementById('product-details');
+		if (data.error) {
+			if (data.error.includes("too blurry")) {
+				productDetails.innerHTML = `
+					<div style="color: orange; font-weight: bold; text-align: center;">
+						Error: The uploaded image is too blurry. Please upload a clear image.
+					</div>
+				`;
+			} else if (data.error.toLowerCase().includes("eastern dress")) {
+				productDetails.innerHTML = `
+					<div style="color: red; font-weight: bold; text-align: center;">
+						Error: This doesn't look like an Eastern dress. Upload a shalwar kameez, saree, or lehenga.
+					</div>
+				`;
+			} else if (
+				data.error.toLowerCase().includes("no matching products found") ||
+				data.error.toLowerCase().includes("no products found")
+			) {
+				productDetails.innerHTML = `
+					<div style="color: #ff9800; font-weight: bold; text-align: center;">
+						Sorry, no matching products were found. Please try a different image.
+					</div>
+				`;
+			} else {
+				productDetails.innerHTML = `
+					<div style="color: red; font-weight: bold; text-align: center;">
+						Error: ${data.error}
+					</div>
+				`;
+			}
+		} else {
+			displayProductDetails(data);
+		}
+	})
+	.catch(error => {
+    const productDetails = document.getElementById('product-details');
+    productDetails.innerHTML = `
+        <div style="color: red; font-weight: bold; text-align: center;">
+            Error: ${error.message}
+        </div>
+    `;
+});
+	// Clear the file input after processing
+	imageInput.value = '';
+}
+
+// Function to display fetched product details
+function displayProductDetails(data) {
+	const productDetails = document.getElementById('product-details');
+
+	// Check if data is an array of products
+	if (Array.isArray(data)) {
+		data.forEach(product => {
+			const productItem = document.createElement('div');
+			productItem.classList.add('col-md-4', 'col-sm-6');
+
+			const productInner = document.createElement('div');
+			productInner.classList.add('single-explore-item');
+
+			const link = document.createElement('a');
+			link.setAttribute('href', product.product_link);
+			link.setAttribute('target', '_blank');
+
+			const productImgDiv = document.createElement('div');
+			productImgDiv.classList.add('single-explore-img');
+			const productImage = document.createElement('img');
+			productImage.setAttribute('src', product.product_image);
+			productImage.setAttribute('alt', product.product_name);
+			productImage.classList.add('product-img');
+			productImgDiv.appendChild(productImage);
+
+			const productTextDiv = document.createElement('div');
+			productTextDiv.classList.add('single-explore-txt', 'bg-theme-1');
+			const productTitle = document.createElement('h4');
+			productTitle.textContent = product.product_name;
+
+			const ratingPriceP = document.createElement('p');
+			ratingPriceP.classList.add('explore-rating-price');
+			const priceSpan = document.createElement('span');
+			priceSpan.classList.add('explore-price-box');
+			priceSpan.textContent = 'Price: ' + product.product_price;
+
+			ratingPriceP.appendChild(priceSpan);
+
+			const explorePersonDiv = document.createElement('div');
+			explorePersonDiv.classList.add('explore-person');
+			const personRow = document.createElement('div');
+			personRow.classList.add('row');
+			const colSm12 = document.createElement('div');
+			colSm12.classList.add('col-sm-12');
+
+			const productDescription = document.createElement('p');
+			productDescription.textContent = product.product_description;
+
+			colSm12.appendChild(productDescription);
+			personRow.appendChild(colSm12);
+			explorePersonDiv.appendChild(personRow);
+
+			productTextDiv.appendChild(productTitle);
+			productTextDiv.appendChild(ratingPriceP);
+			productTextDiv.appendChild(explorePersonDiv);
+
+			link.appendChild(productImgDiv);
+			link.appendChild(productTextDiv);
+
+			productInner.appendChild(link);
+			productItem.appendChild(productInner);
+
+			productDetails.appendChild(productItem);
+		});
+
+		productDetails.style.display = 'block';
+	} else {
+		// Display a single product if data is not an array
+		console.log('Expected array, received single product object');
+	}
+}
+</script>
+
+
+<script>
+// Function to send request to backend and display product details
+function searchProduct() {
+// toggle div 
+  const divOne = document.getElementById("list-topics");
+  const divTwo = document.getElementById("SearchList");
+
+  // Toggle visibility
+	divOne.style.display = "none"; // Hide divOne
+	divTwo.style.display = "block"; // Show divTwo
+
+const descriptionInput = document.getElementById('descriptionInput').value;
+const errorMessage = document.getElementById('error-message');
+const productDetails = document.getElementById('product-details');
+
+// Clear previous results
+productDetails.innerHTML = ''; // Clear the previous product details
+errorMessage.style.display = 'none';
+
+if (!descriptionInput) {
+	errorMessage.textContent = 'Please enter a description to search.';
+	errorMessage.style.display = 'block';
+	return;
+}
+
+// Sending the input text to the backend API
+fetch('http://127.0.0.1:5001/search/', {    
+	method: 'POST',
+	headers: {
+		'Content-Type': 'application/json'
+	},
+	body: JSON.stringify({ description: descriptionInput })
+})
+.then(response => {
+	if (!response.ok) {
+		throw new Error('Failed to fetch data');
+	}
+	return response.json();
+})
+.then(data => {
+    const productDetails = document.getElementById('product-details');
+    if (data.error) {
+        if (
+            data.error.toLowerCase().includes("no matching products found") ||
+            data.error.toLowerCase().includes("no products found")
+        ) {
+            productDetails.innerHTML = `
+                <div class="custom-alert custom-alert-warning">
+                    <i class="fa fa-exclamation-circle"></i>
+                    Sorry, no matching products were found. Please try a different prompt.
+                </div>
+            `;
+        } else if (data.error.toLowerCase().includes("gibberish")) {
+            productDetails.innerHTML = `
+                <div class="custom-alert custom-alert-error">
+                    <i class="fa fa-times-circle"></i>
+                    Please enter a valid description. Gibberish or meaningless input is not allowed.
+                </div>
+            `;
+        } else {
+            productDetails.innerHTML = `
+                <div class="custom-alert custom-alert-error">
+                    <i class="fa fa-times-circle"></i>
+                    Error: ${data.error}
+                </div>
+            `;
+        }
+    } else {
+        displayProductDetails(data);
+    }
+})
+.catch(error => {
+	errorMessage.textContent = 'Error: ' + error.message;
+	errorMessage.style.display = 'block';
+});
+}
+
+// Function to display the fetched product details
+function displayProductDetails(data) {
+const productDetails = document.getElementById('product-details');
+
+// Check if data is an array (multiple products)
+if (Array.isArray(data)) {
+	data.forEach(product => {
+		// Create the main container div for each product
+		const productItem = document.createElement('div');
+		productItem.classList.add('col-md-4', 'col-sm-6'); // Add necessary Bootstrap classes
+
+		// Create the inner structure of the product card
+		const productInner = document.createElement('div');
+		productInner.classList.add('single-explore-item');
+
+		// Create anchor tag for product link
+		const link = document.createElement('a');
+		link.setAttribute('href', product.product_link);
+		link.setAttribute('target', '_blank');
+
+		// Create and append product image
+		const productImgDiv = document.createElement('div');
+		productImgDiv.classList.add('single-explore-img');
+		const productImage = document.createElement('img');
+		productImage.setAttribute('src', product.product_image);
+		productImage.setAttribute('alt', product.product_name);
+		productImage.classList.add('product-img');
+		productImgDiv.appendChild(productImage);
+
+		// Create and append product name (title)
+		const productTextDiv = document.createElement('div');
+		productTextDiv.classList.add('single-explore-txt', 'bg-theme-1');
+		const productTitle = document.createElement('h4');
+		productTitle.textContent = product.product_name;
+
+		// Create and append product size and price
+		const ratingPriceP = document.createElement('p');
+		ratingPriceP.classList.add('explore-rating-price');
+		const priceSpan = document.createElement('span');
+		priceSpan.classList.add('explore-price-box');
+		priceSpan.textContent = product.product_price;
+
+		// ratingPriceP.appendChild(sizeSpan);
+		ratingPriceP.appendChild(priceSpan);
+
+		// Create and append product description
+		const explorePersonDiv = document.createElement('div');
+		explorePersonDiv.classList.add('explore-person');
+		const personRow = document.createElement('div');
+		personRow.classList.add('row');
+
+	//    Wrap text 
+		const colSm12 = document.createElement('div');
+		colSm12.classList.add('col-sm-12');
+
+		// Create the product description container
+		const productDescription = document.createElement('p');
+		productDescription.textContent = product.product_description;
+
+		// Create the "See More" span and set its initial style
+		const seeMoreSpan = document.createElement('span');
+		seeMoreSpan.textContent = 'See More';
+		seeMoreSpan.classList.add('see-more');
+		seeMoreSpan.style.color = '#0C7BDA';
+		seeMoreSpan.style.fontSize = '12px';
+		seeMoreSpan.style.textDecoration = 'underline';
+		seeMoreSpan.style.cursor = 'pointer';
+		seeMoreSpan.style.display = 'none'; // Initially hide it
+
+		// Append the product description and "See More" span to the colSm12 div
+		colSm12.appendChild(productDescription);
+		colSm12.appendChild(seeMoreSpan);
+
+		// Check if the product description exceeds 100 characters
+		const maxLength = 200;
+		if (product.product_description.length > maxLength) {
+			// Truncate the description and show the "See More" span
+			productDescription.textContent = product.product_description.slice(0, maxLength) + '...';
+			seeMoreSpan.style.display = 'block'; // Show the "See More" span as a block (on a new line)
+		}
+
+		// Add click event to toggle the full description
+		seeMoreSpan.onclick = function() {
+			if (productDescription.textContent.length > maxLength) {
+				// Show the full description and update the span text
+				productDescription.textContent = product.product_description;
+				seeMoreSpan.textContent = 'See Less';
+			} else {
+				// Hide the extra description and reset the span text
+				productDescription.textContent = product.product_description.slice(0, maxLength) + '...';
+				seeMoreSpan.textContent = 'See More';
+			}
+		};
+
+		// Append colSm12 to the body or desired parent element
+		document.body.appendChild(colSm12);
+
+		
+		// personRow.appendChild(colSm2);
+		personRow.appendChild(colSm12);
+		explorePersonDiv.appendChild(personRow);
+
+		// Append all parts together
+		productTextDiv.appendChild(productTitle);
+		productTextDiv.appendChild(ratingPriceP);
+		productTextDiv.appendChild(explorePersonDiv);
+		link.appendChild(productImgDiv);
+		link.appendChild(productTextDiv);
+		productInner.appendChild(link);
+		productItem.appendChild(productInner);
+
+		// Append the product to the product details container
+		productDetails.appendChild(productItem);
+	});
+
+	// Make the product details container visible
+	productDetails.style.display = 'block';
+} else {
+	// If the data is not an array (single product)
+	const product = data;
+	const productItem = document.createElement('div');
+	productItem.classList.add('col-md-4', 'col-sm-6');
+	const productInner = document.createElement('div');
+	productInner.classList.add('single-explore-item');
+
+	const link = document.createElement('a');
+	link.setAttribute('href', product.product_link);
+	link.setAttribute('target', '_blank');
+
+	const productImgDiv = document.createElement('div');
+	productImgDiv.classList.add('single-explore-img');
+	const productImage = document.createElement('img');
+	productImage.setAttribute('src', product.product_image);
+	productImage.setAttribute('alt', product.product_name);
+	productImage.classList.add('product-img');
+	productImgDiv.appendChild(productImage);
+
+	const productTextDiv = document.createElement('div');
+	productTextDiv.classList.add('single-explore-txt', 'bg-theme-1');
+	const productTitle = document.createElement('h4');
+	productTitle.textContent = product.product_name;
+
+	const ratingPriceP = document.createElement('p');
+	ratingPriceP.classList.add('explore-rating-price');
+	const priceSpan = document.createElement('span');
+	priceSpan.classList.add('explore-price-box');
+	priceSpan.textContent = product.product_price;
+
+	// ratingPriceP.appendChild(sizeSpan);
+	ratingPriceP.appendChild(priceSpan);
+
+	const explorePersonDiv = document.createElement('div');
+	explorePersonDiv.classList.add('explore-person');
+	const personRow = document.createElement('div');
+	personRow.classList.add('row');
+	
+	const colSm12 = document.createElement('div');
+		colSm12.classList.add('col-sm-12');
+
+		// Create the product description container
+		const productDescription = document.createElement('p');
+		productDescription.textContent = product.product_description;
+
+		// Create the "See More" span and set its initial style
+		const seeMoreSpan = document.createElement('span');
+		seeMoreSpan.textContent = 'See More';
+		seeMoreSpan.classList.add('see-more');
+		seeMoreSpan.style.color = '#0C7BDA';
+		seeMoreSpan.style.fontSize = '12px';
+		seeMoreSpan.style.textDecoration = 'underline';
+		seeMoreSpan.style.cursor = 'pointer';
+		seeMoreSpan.style.display = 'none'; // Initially hide it
+
+		// Append the product description and "See More" span to the colSm12 div
+		colSm12.appendChild(productDescription);
+		colSm12.appendChild(seeMoreSpan);
+
+		// Check if the product description exceeds 100 characters
+		const maxLength = 100;
+		if (product.product_description.length > maxLength) {
+			// Truncate the description and show the "See More" span
+			productDescription.textContent = product.product_description.slice(0, maxLength) + '...';
+			seeMoreSpan.style.display = 'block'; // Show the "See More" span as a block (on a new line)
+		}
+
+		// Add click event to toggle the full description
+		seeMoreSpan.onclick = function() {
+			if (productDescription.textContent.length > maxLength) {
+				// Show the full description and update the span text
+				productDescription.textContent = product.product_description;
+				seeMoreSpan.textContent = 'See Less';
+			} else {
+				// Hide the extra description and reset the span text
+				productDescription.textContent = product.product_description.slice(0, maxLength) + '...';
+				seeMoreSpan.textContent = 'See More';
+			}
+		};
+
+		// Append colSm12 to the body or desired parent element
+		document.body.appendChild(colSm12);
+
+	// personRow.appendChild(colSm2);
+	personRow.appendChild(colSm12);
+	explorePersonDiv.appendChild(personRow);
+
+	productTextDiv.appendChild(productTitle);
+	productTextDiv.appendChild(ratingPriceP);
+	productTextDiv.appendChild(explorePersonDiv);
+	link.appendChild(productImgDiv);
+	link.appendChild(productTextDiv);
+	productInner.appendChild(link);
+	productItem.appendChild(productInner);
+
+	productDetails.appendChild(productItem);
+
+	productDetails.style.display = 'block';
+}
+}
+
+</script>
+    </body>
+	
+</html>

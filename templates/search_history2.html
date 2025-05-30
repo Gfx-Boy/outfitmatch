@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html class="no-js" lang="en">
+
+<head>
+    <!-- Meta Data -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Font Family -->
+    <link href="https://fonts.googleapis.com/css?family=Poppins:100,100i,200,200i,300,300i,400,400i,500,500i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
+
+    <!-- Title -->
+    <title>Your Search History - Outfit Match</title>
+
+    <!-- Favicon -->
+    <link rel="shortcut icon" type="image/icon" href="{{ url_for('static', filename='logo/favicon.png') }}" />
+
+    <!-- CSS Files -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/font-awesome.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/linearicons.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/animate.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/flaticon.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/slick.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/slick-theme.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootsnav.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}">
+
+    <!-- DataTables CSS (CDN) -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+
+    <!-- Inline Styles -->
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: Arial, sans-serif;
+        }
+        .history-table {
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin-top: 50px;
+        }
+        .history-table th, .history-table td {
+            vertical-align: middle;
+        }
+        .hist_cls {
+            font-size: 30px;
+            font-weight: bold;
+            margin-top: 30px;
+            margin-bottom: 20px;
+        }
+        .search-image {
+            max-width: 100px;
+            height: auto;
+        }
+        .dataTables_wrapper .dataTables_paginate .paginate_button {
+            margin: 2px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Top Area Start -->
+    <section class="top-area">
+        <div class="header-area">
+            <nav class="navbar navbar-default bootsnav navbar-sticky navbar-scrollspy" data-minus-value-desktop="70" data-minus-value-mobile="55" data-speed="1000">
+                <div class="container">
+                    <div class="navbar-header">
+                        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar-menu">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <a class="navbar-brand" href="{{ url_for('index') }}">Outfit <span>Match</span></a>
+                    </div>
+                    <div class="collapse navbar-collapse menu-ui-design" id="navbar-menu">
+                        <ul class="nav navbar-nav navbar-right" data-in="fadeInDown" data-out="fadeOutUp">
+                            <li class="scroll"><a href="{{ url_for('index') }}">Home</a></li>
+                            <li class="scroll"><a href="#works">How It Works</a></li>
+                            <li class="scroll"><a href="#contact">Contact</a></li>
+                            {% if 'username' in session %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="#">Hi {{ session['username'] }}</a>
+                            </li>
+                            <li><a class="login-btn" href="{{ url_for('logout') }}">Logout</a></li>
+                            <li><a class="login-btn" href="{{ url_for('search_history') }}">Search History</a></li>
+                            {% else %}
+                            <li><a class="login-btn" href="{{ url_for('login') }}">Login</a></li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                </div>
+            </nav>
+        </div>
+        <div class="clearfix"></div>
+    </section>
+    <!-- Top Area End -->
+
+    <!-- Search History Section -->
+    <div class="container">
+        <h1 class="text-center hist_cls">Your Search History</h1>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <!-- Search History DataTable -->
+        {% if history %}
+        <table id="historyTable" class="table table-striped table-bordered" style="width:100%">
+            <thead class="table-dark" style="background-color: #000000 !important; color: #ffffff;">
+                <tr>
+                    <th>Search Time</th>
+                    <th>Search Type</th>
+                    <th>Query</th>
+                    <th>Product Name</th>
+                    <th>Description</th>
+                    <th>Price</th>
+                    <th>Image</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in history %}
+                    <tr>
+                        <td>{{ item.search_time }}</td>
+                        <td>{{ item.search_type }}</td>
+                        <td>{{ item.search_query }}</td>
+                        <td>{{ item.product_name }}</td>
+                        <td>{{ item.product_description }}</td>
+                        <td>{{ item.regular_price }}</td>
+                        <td>
+                            {% if item.image_filename %}
+                                <img src="{{ url_for('uploaded_file', filename=item.image_filename) }}" alt="Search Image" class="img-thumbnail" style="max-width: 100px;">
+                            {% else %}
+                                No Image
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="alert alert-info text-center" role="alert">
+            No search history found.
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Footer Start -->
+    <footer id="footer" class="footer">
+        <div class="container">
+            <div class="footer-menu">
+                <div class="row">
+                    <div class="col-sm-3">
+                        <div class="navbar-header">
+                            <a class="navbar-brand" href="{{ url_for('index') }}">Outfit <span>Match</span></a>
+                        </div>
+                    </div>
+                    <div class="col-sm-9">
+                        <ul class="footer-menu-item">
+                            <li class="scroll"><a href="#works">How It Works</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="hm-footer-copyright">
+                <div class="row">
+                    <div class="col-sm-5">
+                        <p>©copyright. Designed and developed by <a href="#">Rahima, Sobia & Ahmer</a></p>
+                    </div>
+                    <div class="col-sm-7">
+                        <div class="footer-social">
+                            <a href="#"><i class="fa fa-facebook"></i></a>
+                            <a href="#"><i class="fa fa-twitter"></i></a>
+                            <a href="#"><i class="fa fa-linkedin"></i></a>
+                            <a href="#"><i class="fa fa-google-plus"></i></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="scroll-Top">
+            <div class="return-to-top">
+                <i class="fa fa-angle-up" id="scroll-top" data-toggle="tooltip" data-placement="top" title="" data-original-title="Back to Top" aria-hidden="true"></i>
+            </div>
+        </div>
+    </footer>
+    <!-- Footer End -->
+
+    <!-- JavaScript Files -->
+    <script src="{{ url_for('static', filename='js/jquery.js') }}"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.8.3/modernizr.min.js"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/bootsnav.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/feather.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/jquery.counterup.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/waypoints.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/slick.min.js') }}"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-easing/1.4.1/jquery.easing.min.js"></script>
+    <script src="{{ url_for('static', filename='js/custom.js') }}"></script>
+
+    <!-- DataTables JS (CDN) -->
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
+    <!-- Initialize DataTable -->
+    <script>
+        $(document).ready(function() {
+            $('#historyTable').DataTable({
+                "pageLength": 10,
+                "order": [[0, "desc"]], // Sort by Search Time (descending)
+                "responsive": true
+            });
+        });
+    </script>
+</body>
+
+</html>

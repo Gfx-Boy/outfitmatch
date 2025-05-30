@@ -1,0 +1,111 @@
+{% extends 'auth/auth_layout.html' %}
+{% block title %}Register - Outfit Match{% endblock %}
+{% block content %}
+<div class="register-container">
+    <div class="brand-logo">
+        <img src="{{ url_for('static', filename='logo/favicon.png') }}" alt="Outfit Match Logo">
+    </div>
+    <h1>Create Your Account</h1>
+    <p>Join us to find your perfect outfit</p>
+    <form action="{{ url_for('register') }}" method="post" autocomplete="off">
+        <div class="form-group">
+            <input type="text" name="username" class="form-control" placeholder="Username" required>
+        </div>
+        <div class="form-group">
+            <input type="email" name="email" class="form-control" placeholder="Email" required>
+        </div>
+        <div class="form-group">
+            <input type="password" name="password" class="form-control" placeholder="Password" required>
+        </div>
+        <button type="submit" class="btn btn-register">Register</button>
+    </form>
+    <div class="login-link">
+        Already have an account? <a href="{{ url_for('login') }}">Login</a>
+    </div>
+</div>
+<style>
+    body {
+        font-family: 'Poppins', sans-serif;
+        background: linear-gradient(to bottom right, #f8f9fa, #e3f2fd);
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+    }
+
+    .register-container {
+        background: #fff;
+        border-radius: 10px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        width: 400px;
+        padding: 30px;
+        text-align: center;
+    }
+
+    .register-container h1 {
+        font-size: 24px;
+        font-weight: 600;
+        margin-bottom: 20px;
+        color: #333;
+    }
+
+    .register-container p {
+        font-size: 14px;
+        color: #666;
+        margin-bottom: 30px;
+    }
+
+    .register-container .form-group {
+        margin-bottom: 20px;
+    }
+
+    .register-container .form-control {
+        border-radius: 30px;
+        border: 1px solid #ddd;
+        padding: 10px 20px;
+        font-size: 14px;
+    }
+
+    .register-container .btn-register {
+        background: #0C7BDA;
+        color: #fff;
+        border: none;
+        border-radius: 30px;
+        padding: 10px 20px;
+        font-size: 16px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background 0.3s ease;
+    }
+
+    .register-container .btn-register:hover {
+        background: #0056b3;
+    }
+
+    .register-container .login-link {
+        font-size: 14px;
+        color: #666;
+        margin-top: 20px;
+    }
+
+    .register-container .login-link a {
+        color: #0C7BDA;
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    .register-container .login-link a:hover {
+        text-decoration: underline;
+    }
+
+    .register-container .brand-logo {
+        margin-bottom: 20px;
+    }
+
+    .register-container .brand-logo img {
+        width: 100px;
+    }
+</style>
+{% endblock %}

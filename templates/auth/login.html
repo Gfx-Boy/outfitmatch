@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Outfit Match</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- Custom CSS -->
+    <style>
+        /* Removed duplicate body rule */
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: url("{{ url_for('static', filename='images/fashion-bg.jpg') }}") no-repeat center center fixed;
+            background-size: cover;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: #333;
+        }
+
+        .login-container {
+            position: relative;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+            width: 400px;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .login-container h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #222;
+        }
+
+        .login-container p {
+            font-size: 14px;
+            color: #555;
+            margin-bottom: 30px;
+        }
+
+        .login-container .form-group {
+            margin-bottom: 20px;
+        }
+
+        .login-container .form-control {
+            border-radius: 30px;
+            border: 1px solid #ddd;
+            padding: 10px 20px;
+            font-size: 14px;
+        }
+
+        .login-container .btn-login {
+            background: linear-gradient(to right, #ff7eb3, #ff758c);
+            color: #fff;
+            border: none;
+            border-radius: 30px;
+            padding: 10px 20px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .login-container .btn-login:hover {
+            background: linear-gradient(to right, #ff758c, #ff7eb3);
+        }
+
+        .login-container .forgot-password {
+            font-size: 12px;
+            color: #ff758c;
+            text-decoration: none;
+            display: block;
+            margin-top: 10px;
+        }
+
+        .login-container .forgot-password:hover {
+            text-decoration: underline;
+        }
+
+        .login-container .register-link {
+            font-size: 14px;
+            color: #666;
+            margin-top: 20px;
+        }
+
+        .login-container .register-link a {
+            color: #ff758c;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .login-container .register-link a:hover {
+            text-decoration: underline;
+        }
+
+        .login-container .brand-logo {
+            margin-bottom: 20px;
+        }
+
+        .login-container .brand-logo img {
+            width: 100px;
+        }
+
+        .login-container .cancel-icon {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 20px;
+            color: #666;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .login-container .cancel-icon:hover {
+            color: #ff758c;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="login-container">
+        <!-- Cancel Icon -->
+        <a href="{{ url_for('index') }}" class="cancel-icon" title="Cancel and go back to Home">
+            <i class="fas fa-times"></i>
+        </a>
+        <div class="brand-logo">
+            <img src="{{ url_for('static', filename='logo/favicon.png') }}" alt="Outfit Match Logo">
+        </div>
+        <h1>Welcome Back!</h1>
+        <p>Login to find your perfect outfit</p>
+        <form method="POST" action="{{ url_for('login') }}">
+            <div class="form-group">
+                <input type="text" name="username" class="form-control" placeholder="Username" required>
+            </div>
+            <div class="form-group">
+                <input type="password" name="password" class="form-control" placeholder="Password" required>
+            </div>
+            <button type="submit" class="btn btn-login">Login</button>
+            <a href="#" class="forgot-password">Forgot Password?</a>
+        </form>
+        <div class="register-link">
+            Don't have an account? <a href="{{ url_for('register') }}">Register Now</a>
+        </div>
+    </div>
+</body>
+
+</html>
