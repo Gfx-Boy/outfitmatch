@@ -498,50 +498,21 @@ def search_product():
         keywords = extract_keywords_from_image(image_path)
         logger.debug(f"Extracted keywords from Meta Llama API: {keywords}")
         if not keywords:
-            # Check if the log contains a 429 error (rate limit)
-            import traceback
-            last_error = traceback.format_exc()
-            if '429' in last_error or 'Too Many Requests' in last_error:
-                return jsonify({"error": "Image analysis service is temporarily unavailable due to rate limiting. Please try again later."}), 503
-            return jsonify({"error": "Image analysis service is temporarily unavailable due to rate limiting. Please try again later."}), 500
+            return jsonify({"error": "Could not extract keywords from image"}), 500
 
-        # 2. Extract main color and type from Meta Llama API output
+
+        # 4. Extract main color and type from Meta Llama API output
         main_color, main_type = extract_main_color_and_type(keywords, color_map, type_list)
         logger.debug(f"Main color: {main_color}, Main type: {main_type}")
 
-        # 3. Only use the main color for searching (ignore type for color search)
-        if main_color:
-            cursor = mysql.connection.cursor()
-            query = f"""
-                SELECT product_detail.Product_name, product_detail.Product_price, product_detail.Product_size, product_detail.Product_link, product_detail.Product_image, product_description.Product_description
-                FROM product_detail
-                LEFT JOIN product_description ON product_detail.Product_link = product_description.Product_link
-                WHERE (product_detail.Product_name LIKE %s OR product_description.Product_description LIKE %s)
-                LIMIT 20
-            """
-            params = [f"%{main_color}%", f"%{main_color}%"]
-            cursor.execute(query, params)
-            rows = cursor.fetchall()
-            cursor.close()
-            products = []
-            for row in rows:
-                products.append({
-                    "product_name": row[0],
-                    "product_price": row[1],
-                    "product_size": row[2],
-                    "product_link": row[3],
-                    "product_image": row[4],
-                    "product_description": row[5] if len(row) > 5 else None
-                })
-        else:
-            products = []
+        # 5. Search local DB for products matching BOTH color and type
+        color_type_products = search_products_by_color_and_type(main_color, main_type, mysql)
+        logger.debug(f"Color and type products found: {len(color_type_products)}")
 
-        # 4. If no products found, return a message
-        if not products:
-            return jsonify({"message": "No product found"}), 200
-
-        # 5. Log search in search_history for logged-in users
+        products = color_type_products
         search_source = 'database'
+
+        # 6. Log search in search_history for logged-in users
         if 'loggedin' in session:
             user_id = session['id']
             cursor = mysql.connection.cursor()

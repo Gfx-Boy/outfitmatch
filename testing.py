@@ -28,10 +28,10 @@ if not os.path.exists(app.config['UPLOAD_FOLDER']):
     os.makedirs(app.config['UPLOAD_FOLDER'])
 
 # MySQL configuration
-app.config['MYSQL_HOST'] = 'localhost'
-app.config['MYSQL_USER'] = 'root'
-app.config['MYSQL_PASSWORD'] = 'root'  # Update with your MySQL password
-app.config['MYSQL_DB'] = 'cloth_design_database'
+app.config['MYSQL_HOST'] = '193.203.166.181'
+app.config['MYSQL_USER'] = 'u557851335_cloth_db'
+app.config['MYSQL_PASSWORD'] = 'Newton 12'  # Update with your MySQL password
+app.config['MYSQL_DB'] = 'u557851335_cloth_design_d'
 app.config['SECRET_KEY'] = '123'  # Change to a secure key in production
 
 # Initialize MySQL
@@ -42,18 +42,22 @@ processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
 
 # Define a list of valid colors and their synonyms with approximate HSV ranges
 color_map = {
-    'red': ['red', 'maroon', 'crimson', 'scarlet'],
-    'green': ['green', 'olive', 'army-green', 'emerald'],
-    'black': ['black'],
-    'white': ['white'],
-    'purple': ['purple', 'dark purple', 'violet'],
-    'teal': ['teal'],
-    'beige': ['beige'],
-    'yellow': ['yellow', 'gold'],
-    'blue': ['blue', 'dark blue', 'ice blue', 'navy'],
-    'pink': ['pink', 'baby pink', 'light pink'],
-    'grey': ['grey', 'mint gray', 'gray'],
-    'orange': ['orange']
+    'red': ['red', 'maroon', 'crimson', 'scarlet', 'burgundy', 'ruby', 'wine', 'cherry', 'garnet'],
+    'green': ['green', 'olive', 'army-green', 'emerald', 'mint', 'lime', 'sage', 'forest', 'moss'],
+    'black': ['black', 'jet', 'ebony', 'charcoal'],
+    'white': ['white', 'ivory', 'cream', 'snow', 'pearl'],
+    'purple': ['purple', 'dark purple', 'violet', 'lavender', 'mauve', 'plum', 'orchid'],
+    'teal': ['teal', 'aqua', 'cyan', 'turquoise'],
+    'beige': ['beige', 'tan', 'camel', 'sand', 'khaki'],
+    'yellow': ['yellow', 'gold', 'mustard', 'lemon', 'amber'],
+    'blue': ['blue', 'dark blue', 'ice blue', 'navy', 'sky', 'azure', 'cobalt', 'sapphire', 'denim'],
+    'pink': ['pink', 'baby pink', 'light pink', 'rose', 'fuchsia', 'magenta', 'blush', 'coral'],
+    'grey': ['grey', 'mint gray', 'gray', 'slate', 'ash', 'silver'],
+    'orange': ['orange', 'peach', 'apricot', 'rust', 'tangerine', 'coral'],
+    'brown': ['brown', 'chocolate', 'coffee', 'mocha', 'walnut', 'hazel', 'taupe', 'umber'],
+    'cream': ['cream', 'off-white', 'eggshell'],
+    'silver': ['silver', 'metallic'],
+    'gold': ['gold', 'golden', 'champagne'],
 }
 
 # Reverse mapping: color synonym -> primary color
@@ -63,11 +67,29 @@ for primary_color, synonyms in color_map.items():
         color_lookup[synonym] = primary_color
 
 type_list = [
+    # Pakistani/Middle Eastern dress types and common variations
     'embroidered', 'organza', 'lawn', 'khaddar', 'caftan', 'suit', 'shalwar',
     'kameez', 'dupatta', 'shirt', 'trouser', 'pakistani', 'marina', 'saree',
-    'kurta', 'kurti', 'chiffon', 'cotton', 'silk', 'velvet'
+    'kurta', 'kurti', 'chiffon', 'cotton', 'silk', 'velvet',
+    'abaya', 'kaftan', 'maxi', 'lehenga', 'anarkali', 'frock', 'gown',
+    'shalwar kameez', 'salwar', 'salwar kameez', 'hijab', 'burqa', 'jilbab',
+    'pishwas', 'angrakha', 'sari', 'saree', 'peshwas', 'cape', 'cape dress',
+    'palazzo', 'palazzo pants', 'tunic', 'tunic dress', 'long shirt', 'long dress',
+    'middle eastern', 'arabic', 'pakistani dress', 'pakistani suit', 'pakistani gown',
+    'pakistani frock', 'pakistani kurta', 'pakistani kameez', 'pakistani shalwar',
+    'pakistani dupatta', 'pakistani saree', 'pakistani abaya', 'pakistani kaftan',
+    'pakistani maxi', 'pakistani lehenga', 'pakistani anarkali', 'pakistani pishwas',
+    'pakistani angrakha', 'pakistani sari', 'pakistani peshwas', 'pakistani cape',
+    'pakistani palazzo', 'pakistani tunic', 'pakistani long shirt', 'pakistani long dress',
+    'middle eastern dress', 'middle eastern suit', 'middle eastern gown',
+    'middle eastern frock', 'middle eastern kurta', 'middle eastern kameez',
+    'middle eastern shalwar', 'middle eastern dupatta', 'middle eastern saree',
+    'middle eastern abaya', 'middle eastern kaftan', 'middle eastern maxi',
+    'middle eastern lehenga', 'middle eastern anarkali', 'middle eastern pishwas',
+    'middle eastern angrakha', 'middle eastern sari', 'middle eastern peshwas',
+    'middle eastern cape', 'middle eastern palazzo', 'middle eastern tunic',
+    'middle eastern long shirt', 'middle eastern long dress'
 ]
-
 
 def get_dominant_color(image):
     try:
@@ -104,7 +126,7 @@ def get_dominant_color(image):
         # Find the hue with the highest frequency
         dominant_hue = np.argmax(hist)
         # Get average saturation and value for the dominant hue
-        hue_mask = cv2.inRange(image_hsv, np.array([dominant_hue - 5, 5, 5]), np.array([dominant_hue + 5, 255, 250]))
+        hue_mask = cv2.inRange(image_hsv, np.array([dominant_hue-5, 5, 5]), np.array([dominant_hue+5, 255, 250]))
         s_mean_hue = np.mean(image_hsv[:, :, 1][hue_mask > 0]) if np.sum(hue_mask) > 0 else 0
         v_mean_hue = np.mean(image_hsv[:, :, 2][hue_mask > 0]) if np.sum(hue_mask) > 0 else 0
 
@@ -141,17 +163,14 @@ def get_dominant_color(image):
         hist_full = cv2.calcHist([image_hsv_full], [0], None, [180], [0, 180])
         hist_full = hist_full / np.sum(hist_full) if np.sum(hist_full) > 0 else np.zeros_like(hist_full)
         dominant_hue_full = np.argmax(hist_full)
-        hue_mask_full = cv2.inRange(image_hsv_full, np.array([dominant_hue_full - 5, 5, 5]),
-                                    np.array([dominant_hue_full + 5, 255, 250]))
+        hue_mask_full = cv2.inRange(image_hsv_full, np.array([dominant_hue_full-5, 5, 5]), np.array([dominant_hue_full+5, 255, 250]))
         s_mean_hue_full = np.mean(image_hsv_full[:, :, 1][hue_mask_full > 0]) if np.sum(hue_mask_full) > 0 else 0
         v_mean_hue_full = np.mean(image_hsv_full[:, :, 2][hue_mask_full > 0]) if np.sum(hue_mask_full) > 0 else 0
 
-        logger.debug(
-            f"Fallback - Dominant hue: {dominant_hue_full}, Saturation: {s_mean_hue_full}, Value: {v_mean_hue_full}")
+        logger.debug(f"Fallback - Dominant hue: {dominant_hue_full}, Saturation: {s_mean_hue_full}, Value: {v_mean_hue_full}")
         if v_mean_full < 30 and s_mean_full < 50:
             return 'black'
-        elif v_mean_full > 180 and s_mean_full < 50 and (
-                0 <= dominant_hue_full <= 10 or 160 <= dominant_hue_full <= 179):
+        elif v_mean_full > 180 and s_mean_full < 50 and (0 <= dominant_hue_full <= 10 or 160 <= dominant_hue_full <= 179):
             return 'white'
         elif s_mean_hue_full < 40 and 40 <= v_mean_hue_full <= 180:
             return 'grey' if v_mean_hue_full < 120 else 'beige'
@@ -174,13 +193,12 @@ def get_dominant_color(image):
         else:
             return None
 
-
 def extract_keywords_from_image(image_path):
     """
     Calls Meta Llama Vision API to extract keywords from the uploaded image.
     """
     api_url = "https://openrouter.ai/api/v1/chat/completions"
-    api_key = "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"
+    api_key = "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"
     headers = {
         "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json"
@@ -193,8 +211,7 @@ def extract_keywords_from_image(image_path):
         "model": "meta-llama/llama-3.2-11b-vision-instruct:free",
         "messages": [
             {"role": "user", "content": [
-                {"type": "text",
-                 "text": "Describe the clothing in this image. List the type, color, style, and any notable features as keywords, separated by commas."},
+                {"type": "text", "text": "Describe the clothing in this image. List the type, color, style, and any notable features as keywords, separated by commas."},
                 {"type": "image_url", "image_url": f"data:image/jpeg;base64,{image_b64}"}
             ]}
         ]
@@ -213,35 +230,31 @@ def extract_keywords_from_image(image_path):
         logger.error(f"Meta Llama Vision API error: {e}")
         return []
 
-
 def extract_relevant_keywords(meta_llama_output, color_map):
     """
     Extracts and normalizes relevant keywords (colors, types, materials) from Meta Llama output.
     Returns a set of keywords for searching.
+    Optimized for Pakistani/Middle Eastern dress types and robust color mapping.
     """
     import re
-    # Flatten color synonyms for reverse lookup
     color_lookup = {synonym: main for main, synonyms in color_map.items() for synonym in synonyms}
-    # Join all output into one string and split by non-word boundaries
     text = ' '.join(meta_llama_output).lower()
     words = re.findall(r'\b\w+\b', text)
     keywords = set()
     for word in words:
-        # Normalize color
+        # Normalize color (robust for red and synonyms)
         if word in color_lookup:
             keywords.add(color_lookup[word])
-        # Add product-relevant words (customize as needed)
-        elif word in ['embroidered', 'organza', 'lawn', 'khaddar', 'caftan', 'suit', 'shalwar', 'kameez', 'dupatta',
-                      'shirt', 'trouser', 'pakistani', 'marina', 'saree', 'kurta', 'kurti', 'chiffon', 'cotton', 'silk',
-                      'velvet']:
+        # Add all expanded dress types
+        elif word in type_list:
             keywords.add(word)
     return list(keywords)
-
 
 def extract_main_color_and_type(meta_llama_output, color_map, type_list):
     """
     Extracts the main color (normalized) and main product type from Meta Llama output.
     Returns a tuple: (color, type) or (None, None) if not found.
+    Optimized for Pakistani/Middle Eastern dress types and robust color mapping.
     """
     import re
     color_lookup = {synonym: main for main, synonyms in color_map.items() for synonym in synonyms}
@@ -258,7 +271,6 @@ def extract_main_color_and_type(meta_llama_output, color_map, type_list):
             break
     return found_color, found_type
 
-
 def search_products_by_keywords(keywords):
     """
     Searches the product_detail table for products matching any of the keywords in name, size, price, or also matches the product_description table for richer results.
@@ -270,8 +282,7 @@ def search_products_by_keywords(keywords):
     like_clauses = []
     params = []
     for kw in keywords:
-        like_clauses.append(
-            "(product_detail.Product_name LIKE %s OR product_detail.Product_size LIKE %s OR product_detail.Product_price LIKE %s OR product_description.Product_description LIKE %s)")
+        like_clauses.append("(product_detail.Product_name LIKE %s OR product_detail.Product_size LIKE %s OR product_detail.Product_price LIKE %s OR product_description.Product_description LIKE %s)")
         params.extend([f"%{kw}%", f"%{kw}%", f"%{kw}%", f"%{kw}%"])
     where_clause = " OR ".join(like_clauses)
     query = f"""
@@ -295,7 +306,6 @@ def search_products_by_keywords(keywords):
             "product_description": row[5] if len(row) > 5 else None
         })
     return products
-
 
 def search_products_by_color_and_type(color, type_, mysql):
     """
@@ -331,9 +341,7 @@ def search_products_by_color_and_type(color, type_, mysql):
         })
     return products
 
-
 CORS(app)  # Allow CORS for all origins and all routes
-
 
 @app.route('/search/', methods=['POST'])
 def search_producttext():
@@ -359,10 +367,9 @@ def search_producttext():
             cursor = mysql.connection.cursor()
             for product in product_details:
                 query = """
-                        INSERT INTO search_history (user_id, search_query, product_name, product_description, \
-                                                    regular_price, search_type)
-                        VALUES (%s, %s, %s, %s, %s, %s) \
-                        """
+                INSERT INTO search_history (user_id, search_query, product_name, product_description, regular_price, search_type)
+                VALUES (%s, %s, %s, %s, %s, %s)
+                """
                 values = (
                     user_id,
                     description_input,
@@ -382,13 +389,11 @@ def search_producttext():
         logger.error(f"Error: {traceback.format_exc()}")
         return jsonify({"error": str(e)}), 500
 
-
 @app.route('/')
 def index():
     if 'loggedin' not in session:
         return redirect(url_for('login'))
     return render_template('index.html')
-
 
 @app.route('/logout')
 def logout():
@@ -396,7 +401,6 @@ def logout():
     session.pop('id', None)
     session.pop('username', None)
     return redirect(url_for('login'))
-
 
 @app.route('/login/', methods=['GET', 'POST'])
 def login():
@@ -416,7 +420,6 @@ def login():
             flash("Incorrect username/password!", "danger")
     return render_template('auth/login.html', title="Login")
 
-
 @app.route('/auth/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST' and 'username' in request.form and 'password' in request.form and 'email' in request.form:
@@ -435,14 +438,12 @@ def register():
         elif not username or not password or not email:
             flash("Please fill out the form!", "danger")
         else:
-            cursor.execute('INSERT INTO users (username, email, password) VALUES (%s, %s, %s)',
-                           (username, email, password))
+            cursor.execute('INSERT INTO users (username, email, password) VALUES (%s, %s, %s)', (username, email, password))
             mysql.connection.commit()
             flash("You have successfully registered!", "success")
             return redirect(url_for('login'))
         cursor.close()
     return render_template('auth/register.html', title="Register")
-
 
 @app.route('/search_history')
 def search_history():
@@ -452,19 +453,12 @@ def search_history():
         user_id = session['id']
         cursor = mysql.connection.cursor()
         query = """
-                SELECT id, \
-                       user_id, \
-                       search_query, \
-                       product_name, \
-                       product_description,
-                       regular_price, \
-                       search_time, \
-                       search_type, \
-                       image_filename
-                FROM search_history
-                WHERE user_id = %s
-                ORDER BY search_time DESC \
-                """
+        SELECT id, user_id, search_query, product_name, product_description, 
+               regular_price, search_time, search_type, image_filename 
+        FROM search_history 
+        WHERE user_id = %s 
+        ORDER BY search_time DESC
+        """
         cursor.execute(query, (user_id,))
         history = cursor.fetchall()
         cursor.close()
@@ -488,7 +482,6 @@ def search_history():
         logger.error(f"Error in search_history: {traceback.format_exc()}")
         return jsonify({"error": str(e)}), 500
 
-
 @app.route('/search/img', methods=['POST'], strict_slashes=False)
 def search_product():
     try:
@@ -505,38 +498,58 @@ def search_product():
         keywords = extract_keywords_from_image(image_path)
         logger.debug(f"Extracted keywords from Meta Llama API: {keywords}")
         if not keywords:
-            return jsonify({"error": "Could not extract keywords from image"}), 500
+            # Check if the log contains a 429 error (rate limit)
+            import traceback
+            last_error = traceback.format_exc()
+            if '429' in last_error or 'Too Many Requests' in last_error:
+                return jsonify({"error": "Image analysis service is temporarily unavailable due to rate limiting. Please try again later."}), 503
+            return jsonify({"error": "Image analysis service is temporarily unavailable due to rate limiting. Please try again later."}), 500
 
-        # 2. Refine keywords using AI response (extract only relevant, normalized keywords)
-        refined_keywords = extract_relevant_keywords(keywords, color_map)
-        logger.debug(f"Refined keywords for search: {refined_keywords}")
-
-        # 3. Ask the UI (frontend) if user wants to further refine or select keywords (optional, pseudo-code)
-        # You can implement a UI step here to let the user select or confirm keywords before searching
-        # Example: return jsonify({"refined_keywords": refined_keywords, "ask_user": True})
-        # If not, continue with backend search
-
-        # 4. Extract main color and type from Meta Llama API output
+        # 2. Extract main color and type from Meta Llama API output
         main_color, main_type = extract_main_color_and_type(keywords, color_map, type_list)
         logger.debug(f"Main color: {main_color}, Main type: {main_type}")
 
-        # 5. Search local DB for products matching BOTH color and type
-        color_type_products = search_products_by_color_and_type(main_color, main_type, mysql)
-        logger.debug(f"Color and type products found: {len(color_type_products)}")
+        # 3. Only use the main color for searching (ignore type for color search)
+        if main_color:
+            cursor = mysql.connection.cursor()
+            query = f"""
+                SELECT product_detail.Product_name, product_detail.Product_price, product_detail.Product_size, product_detail.Product_link, product_detail.Product_image, product_description.Product_description
+                FROM product_detail
+                LEFT JOIN product_description ON product_detail.Product_link = product_description.Product_link
+                WHERE (product_detail.Product_name LIKE %s OR product_description.Product_description LIKE %s)
+                LIMIT 20
+            """
+            params = [f"%{main_color}%", f"%{main_color}%"]
+            cursor.execute(query, params)
+            rows = cursor.fetchall()
+            cursor.close()
+            products = []
+            for row in rows:
+                products.append({
+                    "product_name": row[0],
+                    "product_price": row[1],
+                    "product_size": row[2],
+                    "product_link": row[3],
+                    "product_image": row[4],
+                    "product_description": row[5] if len(row) > 5 else None
+                })
+        else:
+            products = []
 
-        products = color_type_products
+        # 4. If no products found, return a message
+        if not products:
+            return jsonify({"message": "No product found"}), 200
+
+        # 5. Log search in search_history for logged-in users
         search_source = 'database'
-
-        # 6. Log search in search_history for logged-in users
         if 'loggedin' in session:
             user_id = session['id']
             cursor = mysql.connection.cursor()
             for product in products:
                 query = """
-                        INSERT INTO search_history (user_id, search_query, product_name, product_description, \
-                                                    regular_price, search_type, image_filename)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s) \
-                        """
+                INSERT INTO search_history (user_id, search_query, product_name, product_description, regular_price, search_type, image_filename)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+                """
                 values = (
                     user_id,
                     ', '.join(keywords),
@@ -549,14 +562,12 @@ def search_product():
                 cursor.execute(query, values)
             mysql.connection.commit()
             cursor.close()
-            logger.debug(
-                f"Search history stored for user_id: {user_id} with image: {image_filename} and keywords: {keywords}")
+            logger.debug(f"Search history stored for user_id: {user_id} with image: {image_filename} and keywords: {keywords}")
 
         return jsonify(products), 200
     except Exception as e:
         logger.error(f"Error in search_product: {traceback.format_exc()}")
         return jsonify({"error": str(e)}), 500
-
 
 @app.route('/products', methods=['GET'])
 def get_products():
@@ -564,15 +575,11 @@ def get_products():
         # Optionally, you can add query params for filtering/searching
         cursor = mysql.connection.cursor()
         query = '''
-                SELECT product_detail.Product_name, \
-                       product_description.Product_description, \
-                       product_detail.Product_price, \
-                       product_detail.Product_link, \
-                       product_detail.Product_image
-                FROM product_detail
-                         JOIN product_description \
-                              ON product_detail.Product_link = product_description.Product_link LIMIT 50 \
-                '''
+            SELECT product_detail.Product_name, product_description.Product_description, product_detail.Product_price, product_detail.Product_link, product_detail.Product_image
+            FROM product_detail
+            JOIN product_description ON product_detail.Product_link = product_description.Product_link
+            LIMIT 50
+        '''
         cursor.execute(query)
         rows = cursor.fetchall()
         cursor.close()
@@ -590,13 +597,11 @@ def get_products():
         logger.error(f"Error in get_products: {traceback.format_exc()}")
         return jsonify({"error": str(e)}), 500
 
-
 if __name__ == '__main__':
     app.run(debug=True, port=5001)
 
 # --- TEST: Search products using Meta Llama API keywords ---
 from databaseClass import Database
-
 
 def test_search_with_meta_llama_keywords():
     # Simulate keywords returned by Meta Llama API (replace with actual API call if needed)
@@ -608,9 +613,6 @@ def test_search_with_meta_llama_keywords():
         print(product)
     db.close()
 
-
 if __name__ == "__main__":
     test_search_with_meta_llama_keywords()
-
-
 

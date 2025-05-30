@@ -1,7 +1,5 @@
 from flask import Flask, request, jsonify, render_template, redirect, session, url_for
 from flask_cors import CORS
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
 from databaseClass import Database
 import mysql.connector
 from flask import flash
@@ -10,91 +8,247 @@ import MySQLdb.cursors
 from flask_mysqldb import MySQL
 import mysql.connector
 
+# --- FAISS, CLIP, E5, and helper imports ---
+import faiss
+import numpy as np
+import torch
+from transformers import CLIPProcessor, CLIPModel, AutoTokenizer, AutoModel
+import re
 import json
+import ast
 
-
-
-app = Flask(__name__)
+app = Flask(_name_)
 
 # Initialize the database
 db = Database()
-app.config['MYSQL_HOST'] = '193.203.166.181'
-app.config['MYSQL_USER'] = 'u557851335_cloth_db'
-app.config['MYSQL_PASSWORD'] = 'Newton 12'
-app.config['MYSQL_DB'] = 'u557851335_cloth_design_d'
+app.config['MYSQL_HOST'] = 'localhost'
+app.config['MYSQL_USER'] = 'root'
+app.config['MYSQL_PASSWORD'] = ''  # Set your MySQL password here
+app.config['MYSQL_DB'] = 'cloth_design_database'
 app.config['SECRET_KEY'] = '123'
 
 # ✅ Initialize MySQL
 mysql = MySQL(app)
 
+# Load models (adjust paths as needed)
+clip_model = CLIPModel.from_pretrained("C:\\Users\\Ahmer\\Downloads\\models\\openaiclip-vit-base-patch32")
+clip_processor = CLIPProcessor.from_pretrained("C:\\Users\\Ahmer\\Downloads\\models\\openaiclip-vit-base-patch32")
+e5_tokenizer = AutoTokenizer.from_pretrained('intfloat/e5-large-v2')
+e5_model = AutoModel.from_pretrained('intfloat/e5-large-v2')
 
-def get_product_details_from_description(description_input, num_results=5):
-    """
-    Function to get product details from the database by comparing the input text with product descriptions
-    and return multiple similar products.
-    """
-    try:
-        # Retrieve all descriptions and their corresponding product details from the database
-        query = """
-        SELECT product_detail.Product_id, 
-               product_detail.product_name, 
-               product_description.product_description, 
-               product_detail.product_price, 
-               product_detail.product_size, 
-               product_detail.product_image, 
-               product_detail.product_link
-        FROM product_detail
-        JOIN product_description ON product_detail.Product_link = product_description.Product_link
-        """
-        
-        db.cursor.execute(query)
-        products = db.cursor.fetchall()
 
-        # If no products were returned
-        if not products:
-            print("No products found in the database.")  # Log when no products are found
-            return {"error": "No products found in the database"}
+# FAISS Index Class
+class FaissIndex:
+    def _init_(self, dimension):
+        self.index = faiss.IndexFlatIP(dimension)
+        self.product_data = []
 
-        # Extract product descriptions and product IDs for comparison
-        product_descriptions = [product[2] for product in products]
-        product_ids = [product[0] for product in products]
-        product_names = [product[1] for product in products]
-        product_prices = [product[3] for product in products]
-        product_sizes = [product[4] for product in products]
-        product_images = [product[5] for product in products]
-        product_links = [product[6] for product in products]
+    def add_vectors(self, vectors, product_data):
+        vectors = np.array(vectors).astype('float32')
+        faiss.normalize_L2(vectors)
+        self.index.add(vectors)
+        self.product_data.extend(product_data)
 
-        # Use TfidfVectorizer to convert text into vectors
-        vectorizer = TfidfVectorizer(stop_words='english')
-        tfidf_matrix = vectorizer.fit_transform(product_descriptions + [description_input])
+    def search(self, query_vector, k=10, filters=None):
+        query_vector = np.array([query_vector]).astype('float32')
+        faiss.normalize_L2(query_vector)
+        distances, indices = self.index.search(query_vector, k)
+        results = []
+        for i, idx in enumerate(indices[0]):
+            if idx == -1:
+                continue
+            product = self.product_data[idx]
+            product['similarity'] = float(distances[0][i])
+            results.append(product)
+        return results
 
-        # Calculate cosine similarity between the input description and all product descriptions
-        cosine_similarities = cosine_similarity(tfidf_matrix[-1], tfidf_matrix[:-1])
 
-        # Get the indices of the most similar products
-        similarity_scores = cosine_similarities.flatten()  # Flatten the array to get all similarity scores
-        sorted_idx = similarity_scores.argsort()[-num_results:][::-1]  # Get top N most similar products, sorted by score
+# Helper functions for feature extraction and filtering
+def extract_clip_text_features(text):
+    inputs = clip_processor(text=text, return_tensors="pt", padding=True, truncation=True)
+    with torch.no_grad():
+        features = clip_model.get_text_features(**inputs)
+    return features / features.norm(p=2, dim=-1, keepdim=True)
 
-        # Prepare the response with multiple product details
-        result = []
-        for idx in sorted_idx:
-            product = {
-                "product_id": product_ids[idx],
-                "product_name": product_names[idx],
-                "product_description": product_descriptions[idx],
-                "product_price": product_prices[idx],
-                "product_size": product_sizes[idx],
-                "product_image": product_images[idx],
-                "product_link": product_links[idx]
+
+def extract_e5_text_features(text):
+    text = "query: " + text if not text.startswith("query: ") else text
+    inputs = e5_tokenizer(text, return_tensors="pt", padding=True, truncation=True, max_length=512,
+                          return_attention_mask=True)
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    inputs = {k: v.to(device) for k, v in inputs.items()}
+    e5_model.to(device)
+    with torch.no_grad():
+        outputs = e5_model(**inputs)
+    token_embeddings = outputs.last_hidden_state
+    input_mask = inputs['attention_mask']
+    input_mask_expanded = input_mask.unsqueeze(-1).expand(token_embeddings.size()).float()
+    sum_embeddings = torch.sum(token_embeddings * input_mask_expanded, 1)
+    sum_mask = torch.clamp(input_mask_expanded.sum(1), min=1e-9)
+    embeddings = sum_embeddings / sum_mask
+    embeddings = torch.nn.functional.normalize(embeddings, p=2, dim=1)
+    return embeddings.cpu()
+
+
+def json_to_numpy(features_json):
+    if isinstance(features_json, np.ndarray):
+        return features_json.astype(np.float32)
+    if isinstance(features_json, (list, tuple)):
+        return np.array(features_json, dtype=np.float32)
+    if isinstance(features_json, str):
+        try:
+            parsed = json.loads(features_json)
+            if isinstance(parsed, dict):
+                features = parsed['features']
+            else:
+                features = parsed
+        except json.JSONDecodeError:
+            features = ast.literal_eval(features_json)
+        return np.array(features, dtype=np.float32)
+    if isinstance(features_json, dict):
+        return np.array(features_json['features'], dtype=np.float32)
+    raise ValueError(f"Unsupported input type: {type(features_json)}")
+
+
+def is_gibberish(text):
+    if len(text) < 3:
+        return False
+    if len(set(text.lower())) < (len(text) / 2):
+        return True
+    adjacent_pairs = [
+        ('q', 'w'), ('w', 'e'), ('e', 'r'), ('r', 't'), ('t', 'y'), ('y', 'u'), ('u', 'i'), ('i', 'o'), ('o', 'p'),
+        ('a', 's'), ('s', 'd'), ('d', 'f'), ('f', 'g'), ('g', 'h'), ('h', 'j'), ('j', 'k'), ('k', 'l'),
+        ('z', 'x'), ('x', 'c'), ('c', 'v'), ('v', 'b'), ('b', 'n'), ('n', 'm')
+    ]
+    text_lower = text.lower()
+    adjacent_count = 0
+    for i in range(len(text_lower) - 1):
+        if (text_lower[i], text_lower[i + 1]) in adjacent_pairs:
+            adjacent_count += 1
+    if adjacent_count / (len(text) - 1) > 0.5:
+        return True
+    return False
+
+
+def extract_colors(query):
+    EASTERN_COLOR_PALETTE = {
+        'red': ['crimson', 'maroon', 'ruby', 'burgundy', 'scarlet'],
+        'blue': ['navy', 'peacock', 'sapphire', 'azure', 'cobalt'],
+        'green': ['emerald', 'jade', 'olive', 'forest', 'mint'],
+        'gold': ['metallic', 'mustard', 'brass', 'golden', 'amber'],
+        'white': ['ivory', 'off-white', 'cream', 'pearl', 'snow'],
+        'black': ['ebony', 'jet', 'onyx', 'charcoal', 'raven'],
+        'pink': ['rose', 'blush', 'fuchsia', 'magenta', 'coral'],
+        'purple': ['violet', 'lavender', 'lilac', 'plum', 'amethyst']
+    }
+    colors = []
+    query = query.lower()
+    for color in EASTERN_COLOR_PALETTE:
+        if re.search(rf'\\b{color}\\b', query):
+            colors.append(color)
+    for color, variants in EASTERN_COLOR_PALETTE.items():
+        if any(re.search(rf'\\b{v}\\b', query) for v in variants):
+            colors.append(color)
+    return list(set(colors))
+
+
+def enhance_eastern_results(results):
+    # Dummy: just return results for now
+    return results
+
+
+# --- Initialize FAISS indices and load product data ---
+clip_faiss = FaissIndex(512)
+e5_faiss = FaissIndex(1024)
+
+
+def initialize_faiss_indices():
+    cursor = mysql.connection.cursor()
+    cursor.execute("""
+                   SELECT f.id,
+                          f.product_link,
+                          f.clip_features,
+                          d.product_name,
+                          d.product_price,
+                          d.product_size,
+                          d.product_image,
+                          pd.product_description,
+                          pd.e5_features
+                   FROM image_features_table f
+                            JOIN product_detail d ON f.product_link = d.product_link
+                            JOIN product_description pd ON f.product_link = pd.product_link
+                   """)
+    products = cursor.fetchall()
+    cursor.close()
+    clip_vectors = []
+    e5_vectors = []
+    product_data = []
+    for product in products:
+        try:
+            product_info = {
+                "product_id": product[0],
+                "product_link": product[1],
+                "product_name": product[3],
+                "product_price": product[4],
+                "product_size": product[5],
+                "product_image": product[6],
+                "product_description": product[7],
             }
-            result.append(product)
+            clip_features = json_to_numpy(product[2])
+            e5_features = json_to_numpy(product[8])
+            clip_vectors.append(clip_features)
+            e5_vectors.append(e5_features)
+            product_data.append(product_info)
+        except Exception as e:
+            print(f"Skipping product {product[0]}: {str(e)}")
+            continue
+    clip_faiss.add_vectors(clip_vectors, product_data)
+    e5_faiss.add_vectors(e5_vectors, product_data)
+    print(f"FAISS indices initialized with {len(product_data)} products")
 
-        print(f"Returning top {num_results} product details: {result}")  # Log the returned result
-        return result
-    except mysql.connector.Error as e:
-        print(f"Error retrieving products from the database: {e}")  # Log the error
-        return {"error": f"Error retrieving products from the database: {e}"}
 
+# Call this once at startup
+def setup_app():
+    initialize_faiss_indices()
+
+
+setup_app()
+
+
+# --- New text search function ---
+def get_product_details_from_description(description_input, num_results=5):
+    try:
+        if is_gibberish(description_input):
+            return {"error": "Couldn't understand your search",
+                    "suggestion": "Try searching for items like 'blue dress' or 'cotton shirt'"}
+        e5_features = extract_e5_text_features(description_input).numpy()[0]
+        clip_features = extract_clip_text_features(description_input).numpy()[0]
+        filters = {}
+        colors = extract_colors(description_input)
+        if colors:
+            filters['colors'] = colors
+        # Search both indices
+        e5_results = e5_faiss.search(e5_features, num_results * 2, filters)
+        clip_results = clip_faiss.search(clip_features, num_results * 2, filters)
+        # Combine and re-rank results
+        combined_results = {}
+        for result in e5_results + clip_results:
+            pid = result['product_id']
+            if pid not in combined_results:
+                combined_results[pid] = dict(result)
+                combined_results[pid]['combined_similarity'] = result['similarity']
+            else:
+                combined_results[pid]['combined_similarity'] += result['similarity']
+        final_results = sorted(combined_results.values(), key=lambda x: x['combined_similarity'], reverse=True)[
+                        :num_results]
+        SIMILARITY_THRESHOLD = 0.6
+        final_results = [r for r in final_results if r['combined_similarity'] >= SIMILARITY_THRESHOLD]
+        if not final_results:
+            return {"error": "No matching products found"}
+        return enhance_eastern_results(final_results)
+    except Exception as e:
+        print(f"Text search error: {str(e)}")
+        return {"error": str(e)}
 
 
 # @app.route('/search', methods=['POST'])
@@ -106,7 +260,7 @@ def get_product_details_from_description(description_input, num_results=5):
 #         # Get the input text (description) from the POST request
 #         data = request.get_json()
 #         print(f"Received data: {data}")
-        
+
 #         # Extract description input from the received data
 #         description_input = data.get('description', '')
 
@@ -132,6 +286,8 @@ def get_product_details_from_description(description_input, num_results=5):
 
 
 CORS(app, resources={r"/search": {"origins": "http://127.0.0.1:5500"}})
+
+
 @app.route('/search', methods=['POST'])
 def search_product():
     """
@@ -141,7 +297,7 @@ def search_product():
         # Get the input text (description) from the POST request
         data = request.get_json()
         print(f"Received data: {data}")
-        
+
         # Extract description input from the received data
         description_input = data.get('description', '')
 
@@ -165,9 +321,10 @@ def search_product():
             # Insert each product result into the search_history table with the search query
             for product in product_details:
                 query = """
-                INSERT INTO search_history (user_id, search_query, product_name, product_description, regular_price)
-                VALUES (%s, %s, %s, %s, %s)
-                """
+                        INSERT INTO search_history (user_id, search_query, product_name, product_description, \
+                                                    regular_price)
+                        VALUES (%s, %s, %s, %s, %s) \
+                        """
                 values = (
                     user_id,
                     description_input,  # Store the user's input query
@@ -191,8 +348,7 @@ def search_product():
         return jsonify({"error": str(e)}), 500
 
 
-# updated code for signup and login 
-
+# updated code for signup and login
 @app.route('/')
 def index():
     if 'username' in session:
@@ -200,16 +356,16 @@ def index():
     else:
         return redirect(url_for('login'))
 
+
 @app.route('/logout')
 def logout():
     session.pop('username', None)
     return redirect(url_for('index'))
 
 
-
 @app.route('/login/', methods=['GET', 'POST'])
 def login():
-# Output message if something goes wrong...
+    # Output message if something goes wrong...
     # Check if "username" and "password" POST requests exist (user submitted form)
     if request.method == 'POST' and 'username' in request.form and 'password' in request.form:
         # Create variables for easy access
@@ -220,7 +376,7 @@ def login():
         cursor.execute('SELECT * FROM users WHERE username = %s AND password = %s', (username, password))
         # Fetch one record and return result
         account = cursor.fetchone()
-                # If account exists in accounts table in out database
+        # If account exists in accounts table in out database
         if account:
             # Create session data, we can access this data in other routes
             session['loggedin'] = True
@@ -231,9 +387,7 @@ def login():
         else:
             # Account doesnt exist or username/password incorrect
             flash("Incorrect username/password!", "danger")
-    return render_template('auth/login.html',title="Login")
-
-
+    return render_template('auth/login.html', title="Login")
 
 
 @app.route('/auth/register', methods=['GET', 'POST'])
@@ -244,10 +398,10 @@ def register():
         username = request.form['username']
         password = request.form['password']
         email = request.form['email']
-                # Check if account exists using MySQL
+        # Check if account exists using MySQL
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         # cursor.execute('SELECT * FROM users WHERE username = %s', (username))
-        cursor.execute( "SELECT * FROM users WHERE username LIKE %s", [username] )
+        cursor.execute("SELECT * FROM users WHERE username LIKE %s", [username])
         account = cursor.fetchone()
         # If account exists show error and validation checks
         if account:
@@ -259,8 +413,8 @@ def register():
         elif not username or not password or not email:
             flash("Incorrect username/password!", "danger")
         else:
-        # Account doesnt exists and the form data is valid, now insert new account into accounts table
-            cursor.execute('INSERT INTO users VALUES (NULL, %s, %s, %s)', (username,email, password))
+            # Account doesnt exists and the form data is valid, now insert new account into accounts table
+            cursor.execute('INSERT INTO users VALUES (NULL, %s, %s, %s)', (username, email, password))
             mysql.connection.commit()
             flash("You have successfully registered!", "success")
             return redirect(url_for('login'))
@@ -269,8 +423,7 @@ def register():
         # Form is empty... (no POST data)
         flash("Please fill out the form!", "danger")
     # Show registration form with message (if any)
-    return render_template('./auth/register.html',title="Register")
-
+    return render_template('./auth/register.html', title="Register")
 
 
 @app.route('/search_history', methods=['GET'])
@@ -286,13 +439,14 @@ def search_history():
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
 
     # Fetch all relevant columns, including search_query
-    cursor.execute('SELECT search_query, product_name, product_description, regular_price, search_time FROM search_history WHERE user_id = %s ORDER BY search_time DESC', (user_id,))
+    cursor.execute(
+        'SELECT search_query, product_name, product_description, regular_price, search_time FROM search_history WHERE user_id = %s ORDER BY search_time DESC',
+        (user_id,))
     history = cursor.fetchall()
     cursor.close()
 
     return render_template('search_history2.html', history=history)
 
 
-
-if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+if _name_ == '_main_':
+    app.run(debug=True, port = 5000)
